@@ -123,21 +123,44 @@ function EditorInner({
   useEffect(() => {
     const canvas = fabricRef.current;
     if (!canvas || isLoading) return;
-    // Find objects by type/position heuristic and update
-    canvas.getObjects("textbox").forEach((obj: any) => {
-      // Title on front: large italic
-      if (obj.fontStyle === "italic" && obj.angle === 0) {
-        obj.set({
-          fontSize: controls.titleFontSize,
-          fill: controls.titleColor,
-        });
+    // Prefer explicit object roles (front + spine), fall back to heuristics.
+    canvas.getObjects().forEach((obj: any) => {
+      if (obj?.coverRole === "title") {
+        obj.set({ fill: controls.titleColor });
+
+        // Only resize the editable front title textbox.
+        if (obj.type === "textbox" && obj.angle === 0) {
+          obj.set({ fontSize: controls.titleFontSize });
+        }
+        return;
       }
-      // Author: small, charSpacing 120
-      if (obj.charSpacing === 120) {
-        obj.set({
-          fontSize: controls.authorFontSize,
-          fill: controls.authorColor,
-        });
+
+      if (obj?.coverRole === "author") {
+        obj.set({ fill: controls.authorColor });
+
+        // Only resize the editable front author textbox.
+        if (obj.type === "textbox" && obj.angle === 0) {
+          obj.set({ fontSize: controls.authorFontSize });
+        }
+        return;
+      }
+
+      // Backwards-compatible fallback (older canvases / objects without coverRole)
+      if (obj?.type === "textbox") {
+        // Title on front: large italic
+        if (obj.fontStyle === "italic" && obj.angle === 0) {
+          obj.set({
+            fontSize: controls.titleFontSize,
+            fill: controls.titleColor,
+          });
+        }
+        // Author: small, charSpacing 120
+        if (obj.charSpacing === 120) {
+          obj.set({
+            fontSize: controls.authorFontSize,
+            fill: controls.authorColor,
+          });
+        }
       }
     });
     canvas.renderAll();
