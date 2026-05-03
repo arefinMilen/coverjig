@@ -473,6 +473,7 @@ export function useBookCanvas({
           evented: true,
         },
       );
+      (backText as any).coverRole = "backCover";
       objectsRef.current.backText = backText;
 
       // ── BACK COVER: Barcode (BOTTOM RIGHT) ──────────────────────────────────
