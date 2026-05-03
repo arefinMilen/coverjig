@@ -530,6 +530,19 @@ textarea {
   gap: 32px;
   flex-wrap: wrap;
 }
+.gallery-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+  min-width: min(100%, 360px);
+}
+.gallery-header-actions .btn-secondary,
+.gallery-header-actions .btn-primary {
+  min-height: 48px;
+  white-space: nowrap;
+}
 .gallery-header-left {
   display: flex;
   align-items: flex-start;
@@ -1308,6 +1321,15 @@ textarea {
     flex-direction: column;
     align-items: flex-start;
   }
+  .gallery-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 18px;
+  }
+  .gallery-header-actions .btn-secondary,
+  .gallery-header-actions .btn-primary {
+    flex: 1 1 220px;
+  }
   .gallery-header-left {
     flex-direction: column;
     gap: 16px;
@@ -1320,6 +1342,19 @@ textarea {
   }
   .step-label {
     margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 520px) {
+  .gallery-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .gallery-header-actions .btn-secondary,
+  .gallery-header-actions .btn-primary {
+    width: 100%;
+    flex-basis: auto;
   }
 }
 
