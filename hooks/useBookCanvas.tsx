@@ -7,6 +7,142 @@ import { BookData, CanvasDimensions, PicsumImage } from "@/types";
 type FabricCanvas = any;
 type FabricObject = any;
 
+type CanvasBBox = { left: number; top: number; width: number; height: number };
+
+/** Axis-aligned bbox of a Fabric object after transforms (handles rotated spine text). */
+function readCanvasBBox(obj: FabricObject): CanvasBBox | null {
+  try {
+    if (typeof obj?.setCoords === "function") obj.setCoords();
+    if (typeof obj?.getBoundingRect !== "function") return null;
+    let r = obj.getBoundingRect(true);
+    if (!r?.width || !Number.isFinite(r.left)) r = obj.getBoundingRect();
+    if (!r || !Number.isFinite(r.width)) return null;
+    return {
+      left: r.left,
+      top: r.top,
+      width: r.width,
+      height: r.height,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Center spine text horizontally in the spine stripe & keep its top edge inset from clipping. */
+function fitSpineObjectInStripe(
+  obj: FabricObject,
+  spineLeft: number,
+  spineWidth: number,
+  minTopPx: number,
+) {
+  const spineCx = spineLeft + spineWidth / 2;
+  const eps = 0.25;
+
+  for (let i = 0; i < 8; i++) {
+    if (typeof obj.setCoords === "function") obj.setCoords();
+    const bb = readCanvasBBox(obj);
+    if (!bb || bb.width <= 0) break;
+
+    const dx = spineCx - (bb.left + bb.width / 2);
+    if (Math.abs(dx) > eps) {
+      obj.set({ left: (obj.left ?? 0) + dx });
+    }
+
+    if (typeof obj.setCoords === "function") obj.setCoords();
+    const bb2 = readCanvasBBox(obj);
+    if (!bb2) break;
+    if (bb2.top + eps < minTopPx) {
+      obj.set({ top: (obj.top ?? 0) + (minTopPx - bb2.top) });
+    }
+  }
+  obj.setCoords?.();
+}
+
+/** Position rotated title + author on spine: top inset, horizontally centered vs actual painted bbox. */
+function layoutVerticalSpinePair(options: {
+  titleSpine: FabricObject | null;
+  authorSpine: FabricObject | null;
+  spineLeft: number;
+  spineWidth: number;
+  height: number;
+  titleFontPx: number;
+  authorFontPx: number;
+}) {
+  const {
+    titleSpine,
+    authorSpine,
+    spineLeft,
+    spineWidth,
+    height,
+    titleFontPx,
+    authorFontPx,
+  } = options;
+
+  if (!titleSpine || spineWidth < 24) return;
+
+  const spineCx = spineLeft + spineWidth / 2;
+  const edgePadTop = Math.max(
+    32,
+    Math.round(titleFontPx * 2.25),
+    Math.round(spineWidth * 0.55),
+  );
+  const spineStackGap = Math.max(
+    16,
+    Math.round(Math.min(titleFontPx * 1.2, spineWidth * 0.55)),
+  );
+
+  titleSpine.set({
+    originX: "center",
+    originY: "top",
+    left: spineCx,
+    top: edgePadTop,
+  });
+  fitSpineObjectInStripe(titleSpine, spineLeft, spineWidth, edgePadTop);
+
+  if (!authorSpine) return;
+
+  const tb = readCanvasBBox(titleSpine);
+  const titleText =
+    typeof titleSpine.text === "string" ? titleSpine.text : "Book Title";
+  const authorSeedTop =
+    tb && Number.isFinite(tb.top + tb.height)
+      ? tb.top + tb.height + spineStackGap
+      : edgePadTop + spineTitleFontGuess(titleText, titleFontPx);
+
+  authorSpine.set({
+    originX: "center",
+    originY: "top",
+    left: spineCx,
+    top: authorSeedTop,
+  });
+  fitSpineObjectInStripe(
+    authorSpine,
+    spineLeft,
+    spineWidth,
+    authorSeedTop,
+  );
+
+  const hb = readCanvasBBox(authorSpine);
+  if (hb) {
+    const over = hb.top + hb.height - (height - 22);
+    if (over > 0) {
+      authorSpine.set({ top: (authorSpine.top ?? 0) - over });
+      fitSpineObjectInStripe(
+        authorSpine,
+        spineLeft,
+        spineWidth,
+        authorSeedTop,
+      );
+    }
+  }
+}
+
+/** Rough rotated-title depth when bbox read fails mid-layout. */
+function spineTitleFontGuess(text: string, fontPx: number): number {
+  const len = [...(text || "Book Title")].length;
+  return Math.min(220, Math.max(fontPx * 4, Math.round(len * fontPx * 0.72)));
+}
+
 interface UseBookCanvasProps {
   canvasEl: React.RefObject<HTMLCanvasElement | null>;
   fabricRef: React.MutableRefObject<FabricCanvas | null>;
@@ -273,14 +409,16 @@ export function useBookCanvas({
       (authorFront as any).coverRole = "author";
       objectsRef.current.authorFront = authorFront;
 
-      // ── Spine: Title (TOP - VERTICAL, SINGLE LINE) ────────────────────────
+      const spineTitleFont = Math.min(14, spineWidth - 4);
+      const spineAuthorFont = Math.min(12, Math.max(10, spineWidth - 8));
+
+      // ── Spine: Title (vertical — layout refined after canvas.add)
       let titleSpine: FabricObject | null = null;
       if (spineWidth >= 24) {
         titleSpine = new fabric.Text(bookData.title || "Book Title", {
           left: spineLeft + spineWidth / 2,
-          top: 30,
-          width: 60,
-          fontSize: Math.min(14, spineWidth - 4),
+          top: 48,
+          fontSize: spineTitleFont,
           fontFamily: "Georgia, serif",
           fontStyle: "italic",
           fill: "#f0ece3",
@@ -296,17 +434,18 @@ export function useBookCanvas({
         objectsRef.current.titleSpine = titleSpine;
       }
 
-      // ── Spine: Author (CENTER - VERTICAL, SINGLE LINE) ─────────────────────
+      // ── Spine: Author (stacked via layoutVerticalSpinePair)
       let authorSpine: FabricObject | null = null;
       if (spineWidth >= 24) {
         authorSpine = new fabric.Text(bookData.author || "Author", {
           left: spineLeft + spineWidth / 2,
-          top: height / 2,
-          originY: "center",
-          fontSize: Math.min(12, Math.max(10, spineWidth - 8)), // controlled by UI, capped by spine width
+          top: 160,
+          fontSize: spineAuthorFont,
           fontFamily: "Courier New, monospace",
-          fill: "#c9a84c", // controlled by UI
+          fill: "#c9a84c",
+          textAlign: "center",
           originX: "center",
+          originY: "top",
           angle: 90,
           charSpacing: 50,
           selectable: true,
@@ -380,6 +519,18 @@ export function useBookCanvas({
       if (titleSpine) canvas.add(titleSpine);
       if (authorSpine) canvas.add(authorSpine);
 
+      if (titleSpine && spineWidth >= 24) {
+        layoutVerticalSpinePair({
+          titleSpine,
+          authorSpine,
+          spineLeft,
+          spineWidth,
+          height,
+          titleFontPx: spineTitleFont,
+          authorFontPx: spineAuthorFont,
+        });
+      }
+
       canvas.renderAll();
     },
     [bookData, dims],
@@ -402,8 +553,21 @@ export function useBookCanvas({
     if (titleSpine) titleSpine.set("text", bookData.title || "Book Title");
     if (authorSpine) authorSpine.set("text", bookData.author || "Author");
 
+    const sw = dims.spineWidth;
+    if (titleSpine && sw >= 24) {
+      layoutVerticalSpinePair({
+        titleSpine,
+        authorSpine,
+        spineLeft: dims.backWidth,
+        spineWidth: sw,
+        height: dims.height,
+        titleFontPx: Math.min(14, sw - 4),
+        authorFontPx: Math.min(12, Math.max(10, sw - 8)),
+      });
+    }
+
     canvas.renderAll();
-  }, [bookData, fabricRef]);
+  }, [bookData, dims, fabricRef]);
 
   // ── Export PNG ──────────────────────────────────────────────────────────────
   const exportPNG = useCallback(() => {
