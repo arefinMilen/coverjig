@@ -17,28 +17,23 @@ export default function ImageGallery() {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchImages = useCallback(
-    async (pageNum: number) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(
-          `https://picsum.photos/v2/list?page=${pageNum}&limit=${PAGE_SIZE}`
-        );
-        if (!res.ok) throw new Error("Failed to fetch images");
-        const data: PicsumImage[] = await res.json();
-        setImages((prev) =>
-          pageNum === 1 ? data : [...prev, ...data]
-        );
-        setHasMore(data.length === PAGE_SIZE);
-      } catch (err) {
-        setError("Could not load images. Please check your connection.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+  const fetchImages = useCallback(async (pageNum: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `https://picsum.photos/v2/list?page=${pageNum}&limit=${PAGE_SIZE}`,
+      );
+      if (!res.ok) throw new Error("Failed to fetch images");
+      const data: PicsumImage[] = await res.json();
+      setImages((prev) => (pageNum === 1 ? data : [...prev, ...data]));
+      setHasMore(data.length === PAGE_SIZE);
+    } catch (err) {
+      setError("Could not load images. Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchImages(1);
@@ -69,17 +64,17 @@ export default function ImageGallery() {
       <div className="gallery-header">
         <div className="gallery-header-left">
           <button className="btn-back" onClick={handleBack}>
-            ← Back
+            ← Back to Details
           </button>
           <div>
-            <span className="step-label">Step 02 / 03</span>
+            <span className="step-label">🖼️ Step 02 / 03</span>
             <h1 className="gallery-title">
-              Select a <em>Cover Image</em>
+              Choose Your <em>Cover Image</em>
             </h1>
             <p className="gallery-subtitle">
               Designing cover for{" "}
               <strong>&ldquo;{bookData.title}&rdquo;</strong> by{" "}
-              {bookData.author}
+              <strong>{bookData.author}</strong> • {bookData.pageCount} pages
             </p>
           </div>
         </div>
@@ -88,8 +83,9 @@ export default function ImageGallery() {
           className="btn-primary"
           onClick={handleProceed}
           disabled={!selectedImage}
+          title={!selectedImage ? "Select an image first" : ""}
         >
-          Open in Editor
+          {selectedImage ? "Edit in Designer" : "Select Image"}
           <span className="btn-arrow">→</span>
         </button>
       </div>
@@ -103,12 +99,19 @@ export default function ImageGallery() {
               alt={selectedImage.author}
               width={60}
               height={40}
-              style={{ objectFit: "cover", borderRadius: "3px" }}
+              style={{ objectFit: "cover", borderRadius: "6px" }}
             />
           </div>
-          <span>
-            <strong>Selected:</strong> Photo by {selectedImage.author}
-          </span>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontWeight: 600, fontSize: "14px" }}>
+              ✓ Selected
+            </span>
+            <br />
+            <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+              Photo by <em>{selectedImage.author}</em> • {selectedImage.width}×
+              {selectedImage.height}px
+            </span>
+          </div>
           <span className="selected-check">✓</span>
         </div>
       )}
@@ -116,7 +119,7 @@ export default function ImageGallery() {
       {/* Error */}
       {error && (
         <div className="gallery-error">
-          <span>⚠ {error}</span>
+          <span>⚠️ {error}</span>
           <button onClick={() => fetchImages(page)}>Retry</button>
         </div>
       )}
@@ -130,7 +133,7 @@ export default function ImageGallery() {
               key={img.id}
               className={`image-card ${isSelected ? "image-card--selected" : ""}`}
               onClick={() => handleSelect(img)}
-              title={`Photo by ${img.author}`}
+              title={`Photo by ${img.author} - ${img.width}×${img.height}`}
             >
               <div className="image-card-inner">
                 <Image
@@ -148,9 +151,9 @@ export default function ImageGallery() {
                 )}
               </div>
               <div className="image-card-meta">
-                <span className="image-card-author">{img.author}</span>
+                <span className="image-card-author">by {img.author}</span>
                 <span className="image-card-dim">
-                  {img.width} × {img.height}
+                  {img.width}×{img.height}
                 </span>
               </div>
             </button>
@@ -168,7 +171,7 @@ export default function ImageGallery() {
       {!loading && hasMore && (
         <div className="gallery-footer">
           <button className="btn-load-more" onClick={loadMore}>
-            Load More Images
+            ↓ Load More Images
           </button>
         </div>
       )}

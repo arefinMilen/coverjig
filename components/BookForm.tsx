@@ -20,7 +20,12 @@ const GENRES = [
 export default function BookForm() {
   const { bookData, setBookData, setCurrentStep } = useBookDesigner();
   const [form, setForm] = useState<BookData>(bookData);
-  const [errors, setErrors] = useState<Partial<Record<keyof BookData, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof BookData, string>>>(
+    {},
+  );
+  const [touched, setTouched] = useState<
+    Partial<Record<keyof BookData, boolean>>
+  >({});
 
   function validate(): boolean {
     const newErrors: Partial<Record<keyof BookData, string>> = {};
@@ -42,7 +47,7 @@ export default function BookForm() {
   }
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) {
     const { name, value } = e.target;
     setForm((prev) => ({
@@ -55,73 +60,110 @@ export default function BookForm() {
     }
   }
 
+  function handleBlur(field: keyof BookData) {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  }
+
   // Live spine preview
   const spineWidth = Math.max(30, Math.round(form.pageCount * 0.08));
+  const isFormValid =
+    form.title &&
+    form.author &&
+    form.genre &&
+    form.pageCount >= 10 &&
+    form.pageCount <= 2000;
 
   return (
     <div className="form-page">
       <div className="form-left">
         <div className="form-header">
-          <span className="step-label">Step 01 / 03</span>
+          <span className="step-label">✨ Step 01 / 03</span>
           <h1 className="form-title">
-            Define Your
+            Design Your
             <br />
-            <em>Book</em>
+            <em>Book Cover</em>
           </h1>
           <p className="form-subtitle">
-            Enter the details of your book. These will be used to compose the
-            cover layout and spine width.
+            Start by telling us about your book. These details will help us
+            create the perfect cover layout for your title and spine.
           </p>
         </div>
 
         <div className="form-fields">
           <div className="field-group">
             <label className="field-label" htmlFor="title">
-              Book Title
+              📚 Book Title <span style={{ color: "var(--error)" }}>*</span>
             </label>
             <input
               id="title"
               name="title"
               type="text"
-              className={`field-input ${errors.title ? "field-input--error" : ""}`}
-              placeholder="e.g. The Midnight Library"
+              className={`field-input ${errors.title && touched.title ? "field-input--error" : ""}`}
+              placeholder="Enter your book title"
               value={form.title}
               onChange={handleChange}
+              onBlur={() => handleBlur("title")}
+              maxLength={100}
             />
-            {errors.title && (
-              <span className="field-error">{errors.title}</span>
+            {errors.title && touched.title && (
+              <span className="field-error">✗ {errors.title}</span>
+            )}
+            {!errors.title && form.title && (
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: "var(--success)",
+                  fontWeight: 500,
+                }}
+              >
+                ✓ Looks great!
+              </span>
             )}
           </div>
 
           <div className="field-group">
             <label className="field-label" htmlFor="author">
-              Author Name
+              ✍️ Author Name <span style={{ color: "var(--error)" }}>*</span>
             </label>
             <input
               id="author"
               name="author"
               type="text"
-              className={`field-input ${errors.author ? "field-input--error" : ""}`}
-              placeholder="e.g. Matt Haig"
+              className={`field-input ${errors.author && touched.author ? "field-input--error" : ""}`}
+              placeholder="Your name or pen name"
               value={form.author}
               onChange={handleChange}
+              onBlur={() => handleBlur("author")}
+              maxLength={80}
             />
-            {errors.author && (
-              <span className="field-error">{errors.author}</span>
+            {errors.author && touched.author && (
+              <span className="field-error">✗ {errors.author}</span>
+            )}
+            {!errors.author && form.author && (
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: "var(--success)",
+                  fontWeight: 500,
+                }}
+              >
+                ✓ Perfect!
+              </span>
             )}
           </div>
 
           <div className="field-row">
-            <div className="field-group field-group--half">
+            <div className="field-group">
               <label className="field-label" htmlFor="genre">
-                Genre
+                📖 Genre <span style={{ color: "var(--error)" }}>*</span>
               </label>
               <select
                 id="genre"
                 name="genre"
-                className={`field-input field-select ${errors.genre ? "field-input--error" : ""}`}
+                className={`field-input field-select ${errors.genre && touched.genre ? "field-input--error" : ""}`}
                 value={form.genre}
                 onChange={handleChange}
+                onBlur={() => handleBlur("genre")}
               >
                 <option value="">Select genre…</option>
                 {GENRES.map((g) => (
@@ -130,14 +172,14 @@ export default function BookForm() {
                   </option>
                 ))}
               </select>
-              {errors.genre && (
-                <span className="field-error">{errors.genre}</span>
+              {errors.genre && touched.genre && (
+                <span className="field-error">✗ {errors.genre}</span>
               )}
             </div>
 
-            <div className="field-group field-group--half">
+            <div className="field-group">
               <label className="field-label" htmlFor="pageCount">
-                Page Count
+                📄 Page Count <span style={{ color: "var(--error)" }}>*</span>
               </label>
               <input
                 id="pageCount"
@@ -145,19 +187,36 @@ export default function BookForm() {
                 type="number"
                 min={10}
                 max={2000}
-                className={`field-input ${errors.pageCount ? "field-input--error" : ""}`}
-                placeholder="e.g. 320"
+                className={`field-input ${errors.pageCount && touched.pageCount ? "field-input--error" : ""}`}
+                placeholder="10 - 2000"
                 value={form.pageCount || ""}
                 onChange={handleChange}
+                onBlur={() => handleBlur("pageCount")}
               />
-              {errors.pageCount && (
-                <span className="field-error">{errors.pageCount}</span>
+              {errors.pageCount && touched.pageCount && (
+                <span className="field-error">✗ {errors.pageCount}</span>
+              )}
+              {!errors.pageCount && form.pageCount && (
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--success)",
+                    fontWeight: 500,
+                  }}
+                >
+                  ✓ Valid!
+                </span>
               )}
             </div>
           </div>
 
-          <button className="btn-primary" onClick={handleSubmit}>
-            Choose Cover Image
+          <button
+            className="btn-primary"
+            onClick={handleSubmit}
+            disabled={!isFormValid}
+            style={{ marginTop: "16px" }}
+          >
+            Continue to Image Selection
             <span className="btn-arrow">→</span>
           </button>
         </div>
@@ -165,15 +224,12 @@ export default function BookForm() {
 
       {/* Live Spine Preview */}
       <div className="form-right">
-        <div className="preview-label">Live Spine Preview</div>
+        <div className="preview-label">📐 Live Spine Preview</div>
         <div className="book-preview">
           <div className="preview-back">
             <span>Back</span>
           </div>
-          <div
-            className="preview-spine"
-            style={{ width: `${spineWidth}px` }}
-          >
+          <div className="preview-spine" style={{ width: `${spineWidth}px` }}>
             {spineWidth > 40 && (
               <span className="spine-text">{form.title || "Title"}</span>
             )}
@@ -186,9 +242,8 @@ export default function BookForm() {
           </div>
         </div>
         <p className="spine-info">
-          Spine width:{" "}
-          <strong>{spineWidth}px</strong> &nbsp;·&nbsp; {form.pageCount || 0}{" "}
-          pages
+          Spine width: <strong>{spineWidth}px</strong> <br />
+          {form.pageCount || 0} pages
         </p>
       </div>
     </div>

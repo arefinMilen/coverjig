@@ -61,7 +61,9 @@ function EditorInner({
 }: {
   bookData: ReturnType<typeof useBookDesigner>["bookData"];
   setBookData: ReturnType<typeof useBookDesigner>["setBookData"];
-  selectedImage: NonNullable<ReturnType<typeof useBookDesigner>["selectedImage"]>;
+  selectedImage: NonNullable<
+    ReturnType<typeof useBookDesigner>["selectedImage"]
+  >;
   dims: ReturnType<typeof useBookDesigner>["canvasDimensions"];
   setCurrentStep: ReturnType<typeof useBookDesigner>["setCurrentStep"];
 }) {
@@ -74,7 +76,7 @@ function EditorInner({
   const [scale, setScale] = useState(1);
   const [controls, setControls] = useState<TextControls>(DEFAULT_CONTROLS);
   const [activeTab, setActiveTab] = useState<"text" | "layout" | "export">(
-    "text"
+    "text",
   );
 
   // ── Canvas hook ─────────────────────────────────────────────────────────────
@@ -151,7 +153,7 @@ function EditorInner({
 
       // Back cover text customization
       if (obj?.coverRole === "backCover") {
-        obj.set({ 
+        obj.set({
           fill: controls.backCoverColor,
           fontSize: controls.backCoverFontSize,
         });
@@ -182,13 +184,13 @@ function EditorInner({
   // ── Handlers ────────────────────────────────────────────────────────────────
   function handleControlChange<K extends keyof TextControls>(
     key: K,
-    value: TextControls[K]
+    value: TextControls[K],
   ) {
     setControls((prev) => ({ ...prev, [key]: value }));
   }
 
   function handleBookDataChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) {
     const { name, value } = e.target;
     const updated = {
@@ -216,28 +218,28 @@ function EditorInner({
             className="btn-back"
             onClick={() => setCurrentStep("gallery")}
           >
-            ← Gallery
+            ← Back to Image
           </button>
           <div className="editor-title-info">
-            <span className="step-label">Step 03 / 03</span>
+            <span className="step-label">✏️ Step 03 / 03</span>
             <h1 className="editor-heading">
-              Cover <em>Editor</em>
+              Design <em>Perfect</em> Cover
             </h1>
           </div>
         </div>
 
         <div className="editor-topbar-actions">
           <div className="dims-badge">
-            {dims.totalWidth} × {dims.height}px &nbsp;·&nbsp; Spine:{" "}
-            {dims.spineWidth}px
+            {dims.totalWidth} × {dims.height}px • Spine: {dims.spineWidth}px
           </div>
           <button
             className={`btn-export ${isExporting ? "btn-export--busy" : ""}`}
             onClick={handleExport}
             disabled={isLoading || isExporting}
+            title="Export your cover as high-resolution PNG"
           >
-            {isExporting ? "Exporting…" : "Export PNG"}
-            {!isExporting && <span className="btn-arrow">↓</span>}
+            {isExporting ? "Exporting…" : "⬇ Export PNG"}
+            {!isExporting && <span className="btn-arrow">→</span>}
           </button>
         </div>
       </div>
@@ -249,7 +251,7 @@ function EditorInner({
           {isLoading && (
             <div className="canvas-loading">
               <div className="canvas-spinner" />
-              <span>Building your cover…</span>
+              <span>Preparing your cover…</span>
             </div>
           )}
 
@@ -265,10 +267,7 @@ function EditorInner({
             }}
           >
             {/* Section labels */}
-            <div
-              className="canvas-labels"
-              style={{ width: dims.totalWidth }}
-            >
+            <div className="canvas-labels" style={{ width: dims.totalWidth }}>
               <span style={{ width: dims.backWidth }}>Back Cover</span>
               <span style={{ width: dims.spineWidth }}>Spine</span>
               <span style={{ width: dims.frontWidth }}>Front Cover</span>
@@ -296,7 +295,16 @@ function EditorInner({
                 key={tab}
                 className={`controls-tab ${activeTab === tab ? "controls-tab--active" : ""}`}
                 onClick={() => setActiveTab(tab)}
+                title={
+                  tab === "text"
+                    ? "Edit text content and colors"
+                    : tab === "layout"
+                      ? "View layout dimensions"
+                      : "Export your cover"
+                }
               >
+                {tab === "text" && "✏️"} {tab === "layout" && "📐"}{" "}
+                {tab === "export" && "⬇️"}{" "}
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
@@ -307,33 +315,39 @@ function EditorInner({
             {activeTab === "text" && (
               <div className="controls-section">
                 <div className="ctrl-group">
-                  <label className="ctrl-label">Book Title</label>
+                  <label className="ctrl-label">📚 Book Title</label>
                   <input
                     className="ctrl-input"
                     name="title"
                     value={bookData.title}
                     onChange={handleBookDataChange}
-                    placeholder="Book Title"
+                    placeholder="Enter your book title"
+                    maxLength={100}
                   />
+                  <span className="ctrl-hint">Appears on front cover</span>
                 </div>
 
                 <div className="ctrl-group">
-                  <label className="ctrl-label">Author</label>
+                  <label className="ctrl-label">✍️ Author Name</label>
                   <input
                     className="ctrl-input"
                     name="author"
                     value={bookData.author}
                     onChange={handleBookDataChange}
-                    placeholder="Author Name"
+                    placeholder="Your name"
+                    maxLength={80}
                   />
+                  <span className="ctrl-hint">Displayed below the title</span>
                 </div>
 
                 <div className="ctrl-divider" />
 
                 <div className="ctrl-group">
                   <label className="ctrl-label">
-                    Title Font Size{" "}
-                    <span className="ctrl-value">{controls.titleFontSize}px</span>
+                    📏 Title Font Size{" "}
+                    <span className="ctrl-value">
+                      {controls.titleFontSize}px
+                    </span>
                   </label>
                   <input
                     type="range"
@@ -344,16 +358,19 @@ function EditorInner({
                     onChange={(e) =>
                       handleControlChange(
                         "titleFontSize",
-                        parseInt(e.target.value)
+                        parseInt(e.target.value),
                       )
                     }
                   />
+                  <span className="ctrl-hint">Adjust title prominence</span>
                 </div>
 
                 <div className="ctrl-group">
                   <label className="ctrl-label">
-                    Author Font Size{" "}
-                    <span className="ctrl-value">{controls.authorFontSize}px</span>
+                    📏 Author Font Size{" "}
+                    <span className="ctrl-value">
+                      {controls.authorFontSize}px
+                    </span>
                   </label>
                   <input
                     type="range"
@@ -364,15 +381,16 @@ function EditorInner({
                     onChange={(e) =>
                       handleControlChange(
                         "authorFontSize",
-                        parseInt(e.target.value)
+                        parseInt(e.target.value),
                       )
                     }
                   />
+                  <span className="ctrl-hint">Change author text size</span>
                 </div>
 
                 <div className="ctrl-row">
                   <div className="ctrl-group ctrl-group--half">
-                    <label className="ctrl-label">Title Color</label>
+                    <label className="ctrl-label">🎨 Title Color</label>
                     <div className="ctrl-color-wrap">
                       <input
                         type="color"
@@ -382,11 +400,13 @@ function EditorInner({
                           handleControlChange("titleColor", e.target.value)
                         }
                       />
-                      <span className="ctrl-color-hex">{controls.titleColor}</span>
+                      <span className="ctrl-color-hex">
+                        {controls.titleColor}
+                      </span>
                     </div>
                   </div>
                   <div className="ctrl-group ctrl-group--half">
-                    <label className="ctrl-label">Author Color</label>
+                    <label className="ctrl-label">🎨 Author Color</label>
                     <div className="ctrl-color-wrap">
                       <input
                         type="color"
@@ -396,7 +416,9 @@ function EditorInner({
                           handleControlChange("authorColor", e.target.value)
                         }
                       />
-                      <span className="ctrl-color-hex">{controls.authorColor}</span>
+                      <span className="ctrl-color-hex">
+                        {controls.authorColor}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -405,8 +427,10 @@ function EditorInner({
 
                 <div className="ctrl-group">
                   <label className="ctrl-label">
-                    Back Cover Font Size{" "}
-                    <span className="ctrl-value">{controls.backCoverFontSize}px</span>
+                    📝 Back Cover Font Size{" "}
+                    <span className="ctrl-value">
+                      {controls.backCoverFontSize}px
+                    </span>
                   </label>
                   <input
                     type="range"
@@ -417,14 +441,15 @@ function EditorInner({
                     onChange={(e) =>
                       handleControlChange(
                         "backCoverFontSize",
-                        parseInt(e.target.value)
+                        parseInt(e.target.value),
                       )
                     }
                   />
+                  <span className="ctrl-hint">For back cover text</span>
                 </div>
 
                 <div className="ctrl-group">
-                  <label className="ctrl-label">Back Cover Color</label>
+                  <label className="ctrl-label">🎨 Back Cover Color</label>
                   <div className="ctrl-color-wrap">
                     <input
                       type="color"
@@ -434,7 +459,9 @@ function EditorInner({
                         handleControlChange("backCoverColor", e.target.value)
                       }
                     />
-                    <span className="ctrl-color-hex">{controls.backCoverColor}</span>
+                    <span className="ctrl-color-hex">
+                      {controls.backCoverColor}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -445,7 +472,7 @@ function EditorInner({
               <div className="controls-section">
                 <div className="ctrl-group">
                   <label className="ctrl-label">
-                    Page Count (affects spine)
+                    📄 Page Count (affects spine)
                   </label>
                   <input
                     className="ctrl-input"
@@ -457,7 +484,7 @@ function EditorInner({
                     onChange={handleBookDataChange}
                   />
                   <span className="ctrl-hint">
-                    Spine auto-recalculates on change — canvas will reload.
+                    Spine auto-recalculates — canvas will reload.
                   </span>
                 </div>
 
@@ -465,17 +492,17 @@ function EditorInner({
 
                 <div className="layout-info">
                   <div className="layout-info-row">
-                    <span>Back Cover</span>
+                    <span>📖 Back Cover</span>
                     <strong>{dims.backWidth}px</strong>
                   </div>
                   <div className="layout-info-row">
-                    <span>Spine</span>
+                    <span>🔖 Spine</span>
                     <strong style={{ color: "var(--accent)" }}>
                       {dims.spineWidth}px
                     </strong>
                   </div>
                   <div className="layout-info-row">
-                    <span>Front Cover</span>
+                    <span>📘 Front Cover</span>
                     <strong>{dims.frontWidth}px</strong>
                   </div>
                   <div className="layout-info-row layout-info-row--total">
@@ -491,16 +518,16 @@ function EditorInner({
                 <div className="ctrl-divider" />
 
                 <p className="ctrl-hint">
-                  <strong>Tip:</strong> All text objects on the canvas are{" "}
-                  <em>draggable & resizable</em>. Click any text to select it,
-                  then drag to reposition or use handles to resize.
+                  <strong>💡 Pro Tip:</strong> All text on the canvas is{" "}
+                  <em>draggable & resizable</em>. Click text to select, then
+                  drag to move or resize with handles.
                 </p>
 
                 <button
                   className="btn-secondary"
                   onClick={() => setCurrentStep("gallery")}
                 >
-                  ← Change Image
+                  🖼 Change Image
                 </button>
               </div>
             )}
@@ -509,27 +536,32 @@ function EditorInner({
             {activeTab === "export" && (
               <div className="controls-section">
                 <div className="export-preview">
-                  <div className="export-icon">↓</div>
+                  <div className="export-icon">📥</div>
                   <p className="export-desc">
-                    Export your full book wrap as a high-resolution PNG at{" "}
-                    <strong>2× pixel density</strong> for print-ready quality.
+                    Download your full book cover as a high-resolution PNG at{" "}
+                    <strong>2× pixel density</strong> (print-ready quality).
                   </p>
                 </div>
 
                 <div className="export-specs">
                   <div className="layout-info-row">
-                    <span>Output size</span>
-                    <strong>
-                      {dims.totalWidth * 2} × {dims.height * 2}px
+                    <span className="export-specs-label">📐 Output size</span>
+                    <strong className="export-specs-value">
+                      {dims.totalWidth * 2}×{dims.height * 2}px
                     </strong>
                   </div>
                   <div className="layout-info-row">
-                    <span>Format</span>
-                    <strong>PNG (lossless)</strong>
+                    <span className="export-specs-label">📋 Format</span>
+                    <strong className="export-specs-value">
+                      PNG (Lossless)
+                    </strong>
                   </div>
                   <div className="layout-info-row">
-                    <span>Filename</span>
-                    <strong style={{ fontSize: 11 }}>
+                    <span className="export-specs-label">💾 Filename</span>
+                    <strong
+                      className="export-specs-value"
+                      style={{ fontSize: 11 }}
+                    >
                       {(bookData.title || "book-cover")
                         .replace(/\s+/g, "-")
                         .toLowerCase()}
@@ -543,13 +575,13 @@ function EditorInner({
                   onClick={handleExport}
                   disabled={isLoading || isExporting}
                 >
-                  {isExporting ? "Exporting…" : "Download PNG"}
-                  {!isExporting && " ↓"}
+                  {isExporting ? "Exporting…" : "⬇ Download PNG"}
+                  {!isExporting && " →"}
                 </button>
 
                 <p className="ctrl-hint" style={{ marginTop: 16 }}>
-                  Active selections are cleared automatically before export so
-                  no UI chrome appears in the file.
+                  ✨ All selections are cleared before export to ensure a clean
+                  output with no UI visible.
                 </p>
               </div>
             )}
