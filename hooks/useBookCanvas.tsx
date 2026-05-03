@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { BookData, CanvasDimensions, PicsumImage } from "@/types";
+import { BookData, CanvasDimensions, CoverImage } from "@/types";
 
 // We import fabric types only — the actual lib is loaded dynamically
 type FabricCanvas = any;
@@ -147,7 +147,7 @@ interface UseBookCanvasProps {
   canvasEl: React.RefObject<HTMLCanvasElement | null>;
   fabricRef: React.MutableRefObject<FabricCanvas | null>;
   bookData: BookData;
-  selectedImage: PicsumImage;
+  selectedImage: CoverImage;
   dims: CanvasDimensions;
   onReady: () => void;
   overlayOpacity?: number; // 0-100
@@ -223,7 +223,9 @@ export function useBookCanvas({
       fabricRef.current = canvas;
 
       // ── Load background image (Fabric v7-safe) ──────────────────────────
-      const imgUrl = `https://picsum.photos/id/${selectedImage.id}/${dims.totalWidth}/${dims.height}?cacheBust=${Date.now()}`;
+      const imgUrl = selectedImage.isUploaded
+        ? selectedImage.download_url
+        : `https://picsum.photos/id/${selectedImage.id}/${dims.totalWidth}/${dims.height}?cacheBust=${Date.now()}`;
 
       const addFallback = () => {
         const fallback = new fabric.Rect({
@@ -240,7 +242,9 @@ export function useBookCanvas({
 
       try {
         const imgEl = new Image();
-        imgEl.crossOrigin = "anonymous";
+        if (!selectedImage.isUploaded) {
+          imgEl.crossOrigin = "anonymous";
+        }
         imgEl.decoding = "async";
 
         const loadPromise = new Promise<void>((resolve, reject) => {
