@@ -10,13 +10,17 @@ interface TextControls {
   authorFontSize: number;
   titleColor: string;
   authorColor: string;
+  backCoverFontSize: number;
+  backCoverColor: string;
 }
 
 const DEFAULT_CONTROLS: TextControls = {
   titleFontSize: 36,
   authorFontSize: 14,
-  titleColor: "#f0ece3",
+  titleColor: "#161513",
   authorColor: "#c9a84c",
+  backCoverFontSize: 12,
+  backCoverColor: "#161513",
 };
 
 export default function Editor() {
@@ -142,6 +146,15 @@ function EditorInner({
         if (obj.type === "textbox" && obj.angle === 0) {
           obj.set({ fontSize: controls.authorFontSize });
         }
+        return;
+      }
+
+      // Back cover text customization
+      if (obj?.coverRole === "backCover") {
+        obj.set({ 
+          fill: controls.backCoverColor,
+          fontSize: controls.backCoverFontSize,
+        });
         return;
       }
 
@@ -385,6 +398,43 @@ function EditorInner({
                       />
                       <span className="ctrl-color-hex">{controls.authorColor}</span>
                     </div>
+                  </div>
+                </div>
+
+                <div className="ctrl-divider" />
+
+                <div className="ctrl-group">
+                  <label className="ctrl-label">
+                    Back Cover Font Size{" "}
+                    <span className="ctrl-value">{controls.backCoverFontSize}px</span>
+                  </label>
+                  <input
+                    type="range"
+                    className="ctrl-range"
+                    min={8}
+                    max={24}
+                    value={controls.backCoverFontSize}
+                    onChange={(e) =>
+                      handleControlChange(
+                        "backCoverFontSize",
+                        parseInt(e.target.value)
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="ctrl-group">
+                  <label className="ctrl-label">Back Cover Color</label>
+                  <div className="ctrl-color-wrap">
+                    <input
+                      type="color"
+                      className="ctrl-color"
+                      value={controls.backCoverColor}
+                      onChange={(e) =>
+                        handleControlChange("backCoverColor", e.target.value)
+                      }
+                    />
+                    <span className="ctrl-color-hex">{controls.backCoverColor}</span>
                   </div>
                 </div>
               </div>
