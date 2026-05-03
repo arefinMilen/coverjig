@@ -11,8 +11,8 @@ import {
   BookData,
   BookDesignerContextType,
   CanvasDimensions,
+  CoverImage,
   DesignerStep,
-  PicsumImage,
 } from "@/types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ export function BookDesignerProvider({
 }) {
   const [currentStep, setCurrentStep] = useState<DesignerStep>("form");
   const [bookData, setBookDataState] = useState<BookData>(defaultBookData);
-  const [selectedImage, setSelectedImage] = useState<PicsumImage | null>(null);
+  const [selectedImage, setSelectedImage] = useState<CoverImage | null>(null);
 
   // Wrapped setter so callers can pass partial updates
   const setBookData = useCallback((data: BookData) => {
