@@ -216,7 +216,7 @@ export default function BookForm() {
             disabled={!isFormValid}
             style={{ marginTop: "16px" }}
           >
-            Continue to Image Selection
+            Select a Cover Image
             <span className="btn-arrow">→</span>
           </button>
         </div>

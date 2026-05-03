@@ -238,7 +238,7 @@ function EditorInner({
             disabled={isLoading || isExporting}
             title="Export your cover as high-resolution PNG"
           >
-            {isExporting ? "Exporting…" : "⬇ Export PNG"}
+            {isExporting ? "Exporting…" : "Export PNG"}
             {!isExporting && <span className="btn-arrow">→</span>}
           </button>
         </div>
@@ -575,7 +575,7 @@ function EditorInner({
                   onClick={handleExport}
                   disabled={isLoading || isExporting}
                 >
-                  {isExporting ? "Exporting…" : "⬇ Download PNG"}
+                  {isExporting ? "Exporting…" : " Download PNG"}
                   {!isExporting && " →"}
                 </button>
 

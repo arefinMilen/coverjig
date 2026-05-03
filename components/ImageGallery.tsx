@@ -140,7 +140,7 @@ export default function ImageGallery() {
       <div className="gallery-header">
         <div className="gallery-header-left">
           <button className="btn-back" onClick={handleBack}>
-            Back to Details
+           ⬅️ Back to Details
           </button>
           <div>
             <span className="step-label">Step 02 / 03</span>
@@ -169,7 +169,7 @@ export default function ImageGallery() {
             disabled={!selectedImage}
             title={!selectedImage ? "Select an image first" : ""}
           >
-            {selectedImage ? "Edit in Designer" : "Select Image"}
+            {selectedImage ? "Create Cover" : "Select Image"}
             <span className="btn-arrow">-&gt;</span>
           </button>
         </div>
