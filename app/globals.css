@@ -165,6 +165,7 @@ textarea {
   letter-spacing: 0.05em;
   padding: 8px 12px;
   transition: all var(--transition-fast);
+  border: 3px solid rgb(228, 130, 130);
   border-radius: var(--radius);
   display: inline-flex;
   align-items: center;
@@ -173,6 +174,7 @@ textarea {
 .btn-back:hover {
   color: var(--accent);
   background: var(--accent-dim);
+  font-size: 16px;
 }
 
 .btn-load-more {
@@ -292,6 +294,9 @@ textarea {
 .form-fields {
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
   gap: 28px;
 }
 .field-row {
@@ -551,7 +556,7 @@ textarea {
 
 .gallery-title {
   font-family: var(--font-display);
-  font-size: clamp(32px, 4vw, 48px);
+  font-size: clamp(18px, 4vw, 48px);
   font-weight: 500;
   line-height: 1.2;
   color: var(--text-primary);
@@ -806,7 +811,7 @@ textarea {
 }
 .editor-heading {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 500;
   line-height: 1;
   margin-top: 2px;
@@ -1329,6 +1334,10 @@ textarea {
   .gallery-header-actions .btn-secondary,
   .gallery-header-actions .btn-primary {
     flex: 1 1 220px;
+  }
+  .btn-secondary{
+    text-align: center;
+    justify-content:center;
   }
   .gallery-header-left {
     flex-direction: column;
