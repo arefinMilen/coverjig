@@ -1143,6 +1143,9 @@ textarea {
   color: var(--text-muted);
   line-height: 1.6;
 }
+.ctrl-hint--error {
+  color: var(--error);
+}
 .ctrl-hint strong {
   color: var(--text-secondary);
 }
@@ -1202,6 +1205,23 @@ textarea {
   background: var(--accent-light);
   color: var(--accent);
   border-color: var(--accent);
+}
+.btn-secondary--danger {
+  color: var(--error);
+}
+.btn-secondary--danger:hover {
+  background: var(--error-dim);
+  border-color: var(--error);
+  color: var(--error);
+}
+.barcode-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.barcode-actions .btn-secondary {
+  flex: 1 1 140px;
+  justify-content: center;
 }
 
 /* Export tab */
@@ -1486,6 +1506,13 @@ textarea {
   .ctrl-color-hex {
     min-width: 0;
     overflow-wrap: anywhere;
+  }
+  .barcode-actions {
+    flex-direction: column;
+  }
+  .barcode-actions .btn-secondary {
+    width: 100%;
+    flex-basis: auto;
   }
   .layout-info,
   .export-specs {
