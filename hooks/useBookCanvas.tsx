@@ -151,6 +151,7 @@ interface UseBookCanvasProps {
   dims: CanvasDimensions;
   onReady: () => void;
   overlayOpacity?: number; // 0-100
+  barcodeImageUrl?: string;
 }
 
 export function useBookCanvas({
@@ -161,6 +162,7 @@ export function useBookCanvas({
   dims,
   onReady,
   overlayOpacity = 0,
+  barcodeImageUrl,
 }: UseBookCanvasProps) {
   const objectsRef = useRef<{
     titleFront: FabricObject | null;
@@ -299,17 +301,17 @@ export function useBookCanvas({
       }
 
       // Draw layout after background is ready (objects appear on top)
-      drawLayout(canvas, fabric);
+      await drawLayout(canvas, fabric);
       setOverlayOpacity(overlayOpacity);
       onReady();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedImage.id, dims, overlayOpacity, setOverlayOpacity],
+    [selectedImage.id, dims, overlayOpacity, setOverlayOpacity, barcodeImageUrl],
   );
 
   // ── Draw all layout elements ────────────────────────────────────────────────
   const drawLayout = useCallback(
-    (canvas: FabricCanvas, fabric: any) => {
+    async (canvas: FabricCanvas, fabric: any) => {
       const { backWidth, spineWidth, frontWidth, height, totalWidth } = dims;
       const spineLeft = backWidth;
       const frontLeft = backWidth + spineWidth;
@@ -481,31 +483,86 @@ export function useBookCanvas({
       objectsRef.current.backText = backText;
 
       // ── BACK COVER: Barcode (BOTTOM RIGHT) ──────────────────────────────────
+      const barcodeLeft = backWidth - 118;
+      const barcodeTop = height - 88;
+      const barcodeWidth = 90;
+      const barcodeHeight = 60;
       const barcodeBox = new fabric.Rect({
-        left: backWidth - 98,
-        top: height - 70,
-        width: 70,
-        height: 46,
-        fill: "rgba(255,255,255,0.15)",
-        stroke: "rgba(255,255,255,0.25)",
+        left: barcodeLeft,
+        top: barcodeTop,
+        width: barcodeWidth,
+        height: barcodeHeight,
+        fill: "rgba(255,255,255,0.92)",
+        stroke: "rgba(17,24,39,0.28)",
         strokeWidth: 1,
-        rx: 3,
-        ry: 3,
+        rx: 2,
+        ry: 2,
         selectable: false,
         evented: false,
       });
 
-      const barcodeLabel = new fabric.Text("ISBN\n0000000", {
-        left: backWidth - 95,
-        top: height - 65,
-        fontSize: 8,
-        fontFamily: "Courier New, monospace",
-        fill: "rgba(255,255,255,0.4)",
-        charSpacing: 80,
-        lineHeight: 1.2,
-        selectable: false,
-        evented: false,
-      });
+      let barcodeObject: FabricObject;
+
+      if (barcodeImageUrl) {
+        try {
+          const barcodeEl = new Image();
+          barcodeEl.decoding = "async";
+          await new Promise<void>((resolve, reject) => {
+            barcodeEl.onload = () => resolve();
+            barcodeEl.onerror = () =>
+              reject(new Error("Barcode image failed to load"));
+            barcodeEl.src = barcodeImageUrl;
+          });
+
+          const FabricImageCtor = fabric.FabricImage ?? fabric.Image;
+          barcodeObject = new FabricImageCtor(barcodeEl, {
+            left: barcodeLeft + barcodeWidth / 2,
+            top: barcodeTop + barcodeHeight / 2,
+            originX: "center",
+            originY: "center",
+            selectable: true,
+            evented: true,
+            lockRotation: true,
+            cornerStyle: "circle",
+            transparentCorners: false,
+          });
+
+          const scale = Math.min(
+            barcodeWidth / barcodeObject.width,
+            barcodeHeight / barcodeObject.height,
+          );
+          barcodeObject.scale(scale);
+          (barcodeObject as any).coverRole = "barcode";
+        } catch {
+          barcodeObject = new fabric.Text("Barcode\nfailed", {
+            left: barcodeLeft + barcodeWidth / 2,
+            top: barcodeTop + barcodeHeight / 2,
+            originX: "center",
+            originY: "center",
+            fontSize: 10,
+            fontFamily: "Courier New, monospace",
+            fill: "rgba(17,24,39,0.55)",
+            textAlign: "center",
+            selectable: false,
+            evented: false,
+          });
+        }
+      } else {
+        barcodeObject = new fabric.Text("BARCODE\nAREA", {
+          left: barcodeLeft + barcodeWidth / 2,
+          top: barcodeTop + barcodeHeight / 2,
+          originX: "center",
+          originY: "center",
+          fontSize: 10,
+          fontFamily: "Courier New, monospace",
+          fill: "rgba(17,24,39,0.45)",
+          textAlign: "center",
+          charSpacing: 60,
+          lineHeight: 1.35,
+          selectable: false,
+          evented: false,
+        });
+      }
 
       // ── Add all objects ────────────────────────────────────────────────────
       canvas.add(
@@ -515,7 +572,7 @@ export function useBookCanvas({
         divL,
         divR,
         barcodeBox,
-        barcodeLabel,
+        barcodeObject,
         backText,
         titleFront,
         authorFront,
@@ -538,7 +595,7 @@ export function useBookCanvas({
 
       canvas.renderAll();
     },
-    [bookData, dims],
+    [bookData, dims, barcodeImageUrl],
   );
 
   // ── Update text objects without full reinit ─────────────────────────────────
