@@ -23,6 +23,8 @@ const DEFAULT_CONTROLS: TextControls = {
   backCoverColor: "#161513",
 };
 
+const MAX_BARCODE_BYTES = 2 * 1024 * 1024;
+
 export default function Editor() {
   const {
     bookData,
@@ -70,11 +72,17 @@ function EditorInner({
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<any>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [scale, setScale] = useState(1);
   const [controls, setControls] = useState<TextControls>(DEFAULT_CONTROLS);
+  const [barcodeImage, setBarcodeImage] = useState<{
+    dataUrl: string;
+    fileName: string;
+  } | null>(null);
+  const [barcodeError, setBarcodeError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"text" | "layout" | "export">(
     "text",
   );
@@ -88,6 +96,7 @@ function EditorInner({
     dims,
     onReady: () => setIsLoading(false),
     overlayOpacity: 0,
+    barcodeImageUrl: barcodeImage?.dataUrl,
   });
 
   // ── Load Fabric.js dynamically (SSR-safe) ───────────────────────────────────
@@ -110,7 +119,7 @@ function EditorInner({
     };
     // Re-init when image or dims change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedImage?.id, dims.totalWidth, dims.height]);
+  }, [selectedImage?.id, dims.totalWidth, dims.height, barcodeImage?.dataUrl]);
 
   // ── Scale canvas to fit viewport ────────────────────────────────────────────
   useEffect(() => {
@@ -200,6 +209,39 @@ function EditorInner({
     setBookData(updated);
     // Live update text objects without full reinit
     setTimeout(() => updateTexts(), 0);
+  }
+
+  function handleBarcodeUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setBarcodeError(null);
+
+    if (!file.type.startsWith("image/")) {
+      setBarcodeError("Please upload a PNG, JPG, or SVG barcode image.");
+      return;
+    }
+
+    if (file.size > MAX_BARCODE_BYTES) {
+      setBarcodeError("Barcode image must be less than 2 MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      const dataUrl = readerEvent.target?.result;
+      if (typeof dataUrl !== "string") {
+        setBarcodeError("Could not read that barcode image.");
+        return;
+      }
+
+      setBarcodeImage({ dataUrl, fileName: file.name });
+    };
+    reader.onerror = () => {
+      setBarcodeError("Could not read that barcode image.");
+    };
+    reader.readAsDataURL(file);
   }
 
   async function handleExport() {
@@ -513,6 +555,55 @@ function EditorInner({
                     <span>Height</span>
                     <strong>{dims.height}px</strong>
                   </div>
+                </div>
+
+                <div className="ctrl-divider" />
+
+                <div className="ctrl-group">
+                  <label className="ctrl-label">Barcode</label>
+                  <input
+                    ref={barcodeInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                    onChange={handleBarcodeUpload}
+                    style={{ display: "none" }}
+                    aria-label="Upload barcode image"
+                  />
+                  <div className="barcode-actions">
+                    <button
+                      className="btn-secondary"
+                      type="button"
+                      onClick={() => barcodeInputRef.current?.click()}
+                    >
+                      {barcodeImage ? "Replace Barcode" : "Upload Barcode"}
+                    </button>
+                    {barcodeImage && (
+                      <button
+                        className="btn-secondary btn-secondary--danger"
+                        type="button"
+                        onClick={() => setBarcodeImage(null)}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {barcodeImage && (
+                    <span className="ctrl-hint">
+                      {barcodeImage.fileName} is on the back cover. Drag or
+                      resize it on the canvas.
+                    </span>
+                  )}
+                  {barcodeError && (
+                    <span className="ctrl-hint ctrl-hint--error">
+                      {barcodeError}
+                    </span>
+                  )}
+                  {!barcodeImage && (
+                    <span className="ctrl-hint">
+                      The back cover keeps a placeholder until you upload your
+                      barcode.
+                    </span>
+                  )}
                 </div>
 
                 <div className="ctrl-divider" />
