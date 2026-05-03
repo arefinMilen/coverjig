@@ -519,13 +519,13 @@ textarea {
    GALLERY PAGE
 ══════════════════════════════════════════════════════════════════════════════ */
 .gallery-page {
-  padding: 60px 64px;
+  padding: 0 64px 60px;
   display: flex;
   flex-direction: column;
   gap: 40px;
   flex: 1;
   background: var(--bg);
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .gallery-header {
@@ -534,6 +534,15 @@ textarea {
   justify-content: space-between;
   gap: 32px;
   flex-wrap: wrap;
+  position: sticky;
+  top: 3px;
+  z-index: 80;
+  margin: 0 -64px;
+  padding: 24px 64px;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(14px);
 }
 .gallery-header-actions {
   display: flex;
@@ -1294,18 +1303,57 @@ textarea {
 }
 
 @media (max-width: 900px) {
+  .editor-page {
+    min-height: 100vh;
+  }
   .editor-body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto;
+    overflow: visible;
+  }
+  .canvas-area {
+    min-height: 420px;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
   .controls-panel {
     border-left: none;
     border-top: 2px solid var(--border);
-    max-height: 340px;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+  }
+  .controls-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+  .controls-body {
+    overflow: visible;
+    padding: 22px 24px 32px;
+  }
+  .controls-section {
+    gap: 22px;
+  }
+  .ctrl-input,
+  .ctrl-color-wrap,
+  .btn-secondary,
+  .btn-export-lg {
+    min-height: 48px;
   }
   .editor-topbar {
     padding: 14px 20px;
     flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .editor-topbar-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .editor-topbar-actions .btn-export {
+    width: 100%;
+    min-height: 48px;
   }
   .dims-badge {
     display: none;
@@ -1320,16 +1368,20 @@ textarea {
     padding: 48px 32px;
   }
   .gallery-page {
-    padding: 40px 24px;
+    padding: 0 24px 40px;
+    gap: 28px;
   }
   .gallery-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 18px;
+    margin: 0 -24px;
+    padding: 16px 24px;
   }
   .gallery-header-actions {
     width: 100%;
     justify-content: flex-start;
-    gap: 18px;
+    gap: 16px;
   }
   .gallery-header-actions .btn-secondary,
   .gallery-header-actions .btn-primary {
@@ -1341,7 +1393,8 @@ textarea {
   }
   .gallery-header-left {
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
+    width: 100%;
   }
   .image-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -1355,10 +1408,104 @@ textarea {
 }
 
 @media (max-width: 520px) {
+  .gallery-page {
+    padding: 0 14px 28px;
+    gap: 22px;
+  }
+  .gallery-header {
+    margin: 0 -14px;
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .gallery-title {
+    font-size: 22px;
+  }
+  .gallery-subtitle {
+    display: none;
+  }
+  .gallery-header .step-label {
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+  .gallery-header .btn-back {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  .editor-topbar {
+    padding: 12px 14px;
+    gap: 14px;
+  }
+  .editor-topbar-left {
+    width: 100%;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .editor-title-info {
+    min-width: 0;
+  }
+  .editor-heading {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+  .canvas-area {
+    min-height: 360px;
+    padding: 28px 12px 18px;
+  }
+  .controls-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .controls-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .controls-tab {
+    flex: 1 0 33.333%;
+    min-width: 104px;
+    padding: 14px 8px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .controls-body {
+    padding: 20px 14px 28px;
+  }
+  .controls-section {
+    gap: 18px;
+  }
+  .ctrl-row {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .ctrl-label {
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+  }
+  .ctrl-color-wrap {
+    width: 100%;
+  }
+  .ctrl-color-hex {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .layout-info,
+  .export-specs {
+    padding: 14px;
+  }
+  .layout-info-row {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .layout-info-row span {
+    min-width: 0;
+  }
+  .layout-info-row strong {
+    text-align: right;
+    white-space: nowrap;
+  }
   .gallery-header-actions {
     flex-direction: column;
     align-items: stretch;
-    gap: 14px;
+    gap: 10px;
   }
   .gallery-header-actions .btn-secondary,
   .gallery-header-actions .btn-primary {
