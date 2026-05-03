@@ -12,7 +12,21 @@ export interface PicsumImage {
   height: number;
   url: string;
   download_url: string;
+  isUploaded?: false;
 }
+
+export interface UploadedImage {
+  id: string;
+  author: "User Upload";
+  width: number;
+  height: number;
+  url: string;
+  download_url: string;
+  isUploaded: true;
+  fileName: string;
+}
+
+export type CoverImage = PicsumImage | UploadedImage;
 
 export type DesignerStep = "form" | "gallery" | "editor";
 
@@ -26,17 +40,17 @@ export interface BookDesignerContextType {
   setBookData: (data: BookData) => void;
 
   // Selected cover image
-  selectedImage: PicsumImage | null;
-  setSelectedImage: (image: PicsumImage | null) => void;
+  selectedImage: CoverImage | null;
+  setSelectedImage: (image: CoverImage | null) => void;
 
   // Canvas dimensions (derived from pageCount)
   canvasDimensions: CanvasDimensions;
 }
 
 export interface CanvasDimensions {
-  frontWidth: number;   // Fixed front cover width
-  backWidth: number;    // Same as front
-  spineWidth: number;   // Dynamic: based on pageCount
-  height: number;       // Fixed height
-  totalWidth: number;   // frontWidth + backWidth + spineWidth
+  frontWidth: number; // Fixed front cover width
+  backWidth: number; // Same as front
+  spineWidth: number; // Dynamic: based on pageCount
+  height: number; // Fixed height
+  totalWidth: number; // frontWidth + backWidth + spineWidth
 }
